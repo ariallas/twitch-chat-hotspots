@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import matplotlib.pyplot as plt
 from loguru import logger
 from pydantic import BaseModel, TypeAdapter
 from tqdm.asyncio import tqdm_asyncio
@@ -23,6 +24,32 @@ async def main() -> None:
     video = await twitch_client.get_video()
     comments = await get_comments_cached(twitch_client, video)
     logger.info(f"Got {len(comments)} comments")
+    plot_hotspots(comments, video)
+
+
+def plot_hotspots(comments: list[CommentEdge], video: VideoInfo) -> None:
+    offsets = [int(c.node.contentOffsetSeconds.total_seconds()) for c in comments]
+
+    sample_rate = 10
+    window_length = 60
+
+    sample_count = int(video.lengthSeconds.total_seconds()) // sample_rate + 1
+    sample_points = [i * sample_rate for i in range(sample_count)]
+    message_counts = [0] * sample_count
+    for offset in offsets:
+        window_start = offset - window_length // 2
+        if window_start % sample_rate != 0:
+            window_start = (window_start // sample_rate + 1) * sample_rate
+        window_end = offset + window_length // 2
+        for i in range(window_start, window_end + 1, sample_rate):
+            if 0 <= i < sample_count * sample_rate:
+                message_counts[i // sample_rate] += 1
+
+    plt.style.use("_mpl-gallery")
+
+    fig, ax = plt.subplots()
+    plt.plot(sample_points, message_counts)
+    plt.show()
 
 
 async def get_comments_cached(twitch_client: TwitchClient, video: VideoInfo) -> list[CommentEdge]:
