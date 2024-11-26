@@ -1,0 +1,40 @@
+# Установить: pre-commit install
+# Обновить версии хуков: pre-commit autoupdate
+# Запустить хуки на staged файлах: pre-commit run
+# Запустить хуки на всех файлах: pre-commit run --all-files
+
+repos:
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+    # Prevent giant files from being committed
+    - id: check-added-large-files
+      args: ['--maxkb=1000']
+    # Checks for files that contain merge conflict strings
+    - id: check-merge-conflict
+    # Attempts to load all TOML files to verify syntax
+    - id: check-toml
+    # Attempts to load all yaml files to verify syntax
+    - id: check-yaml
+      exclude: 'charts/templates|\.gitlab-ci\.yml|.*\.j2.*'
+    # Trims trailing whitespace
+    - id: trailing-whitespace
+    # Makes sure files end in a newline and only a newline
+    - id: end-of-file-fixer
+    # Check for files that cannot be created on Windows
+    - id: check-illegal-windows-names
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.7.1
+  hooks:
+    # Run the linter.
+    - id: ruff
+    # Run the formatter.
+    - id: ruff-format
+      args: [ --check ]
+
+- repo: https://github.com/RobertCraigie/pyright-python
+  rev: v1.1.387
+  hooks:
+  - id: pyright
